@@ -24,13 +24,38 @@ For macOS (especially Apple Silicon Macs):
    
    # Install QEMU for ARM64 support (essential for Apple Silicon)
    brew install qemu
+   ```
+
+3. Install Packer QEMU plugin (required for ARM64 builds):
+   ```bash
+   # First install packer-plugin-manager to manage plugins
+   brew install hashicorp/tap/packer-plugin-manager
    
-   # Install Vagrant QEMU plugin (for ARM64 Vagrant support)
+   # Install the QEMU plugin
+   packer plugins install github.com/hashicorp/qemu
+   ```
+
+4. Install Vagrant QEMU plugin (for ARM64 Vagrant support):
+   ```bash
    vagrant plugin install vagrant-qemu
    ```
 
 For AMD64 builds, you may also want VirtualBox:
 - [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
+
+## Important Note about ARM64 Support
+
+Currently, VirtualBox has limited support for ARM64 guests. The Packer template will attempt to build for ARM64 using the ARM64 Debian ISO, but VirtualBox may not properly emulate ARM64 hardware.
+
+For proper ARM64 support on Apple Silicon Macs, you have two options:
+
+1. **Use QEMU with Packer** (recommended for ARM64):
+   - Install the Packer QEMU plugin as described above
+   - This provides native ARM64 virtualization on Apple Silicon
+
+2. **Use VirtualBox with AMD64 ISO** (fallback option):
+   - The template will work with AMD64 Debian ISO on VirtualBox
+   - This will run AMD64 Debian under emulation, which is slower but functional
 
 ## Building the Vagrant Box
 
@@ -68,15 +93,13 @@ For AMD64 builds, you may also want VirtualBox:
 
 4. After successful build, the resulting `.box` file can be added to Vagrant:
    
-   For AMD64:
+   For both AMD64 and ARM64 (current implementation uses VirtualBox output):
    ```bash
    vagrant box add openclaw/openclaw package/output-virtualbox-iso/openclaw-*.box
    ```
    
-   For ARM64:
-   ```bash
-   vagrant box add openclaw/openclaw-arm64 package/output-qemu/openclaw-*.box
-   ```
+   Note: For ARM64, the output will be a VirtualBox format box, but VirtualBox has limited ARM64 support. 
+   For proper ARM64 virtualization, install the Packer QEMU plugin and modify the template accordingly.
 
 ## Using the Vagrant Box
 

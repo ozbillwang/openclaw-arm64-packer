@@ -66,52 +66,11 @@ source "virtualbox-iso" "openclaw" {
   http_directory = "."
 }
 
-# Also add a QEMU builder for better ARM64 support
-source "qemu" "openclaw_arm64" {
-  vm_name           = local.vm_name
-  format            = "qcow2"
-  disk_image        = true
-  iso_url           = "https://cdimage.debian.org/debian-cd/current/arm64/iso-cd/debian-12.8.0-arm64-netinst.iso"
-  iso_checksum      = "sha256:079cd351af2d9985f14da2abc6bb92a759e8d49e8c4f3245d71398a31e2e922f"
-  qemu_binary       = "qemu-system-aarch64"
-  floppy_files      = []
-  
-  # Additional QEMU args for ARM64
-  qemuargs = [
-    ["-machine", "virt"],
-    ["-cpu", "cortex-a57"],  # Compatible ARM64 CPU
-    ["-m", "2048"],
-    ["-smp", "2"]
-  ]
-  
-  ssh_username      = "vagrant"
-  ssh_password      = "vagrant"
-  ssh_port          = 22
-  ssh_wait_timeout  = "10000s"
-  shutdown_command  = "echo 'vagrant' | sudo -S shutdown -h now"
-  
-  boot_command = [
-    "<wait2s><esc><wait>",
-    "install <wait>",
-    " preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg <wait>",
-    "debian-installer=en_US.UTF-8 <wait>",
-    "auto <wait>",
-    "locale=en_US.UTF-8 <wait>",
-    "kbd-chooser/method=us <wait>",
-    "keyboard-configuration/xkb-keymap=us <wait>",
-    "netcfg/get_hostname={{user `vm_name`}} <wait>",
-    "netcfg/get_domain=vagrantup.com <wait>",
-    "<enter><wait>"
-  ]
-}
-
 # Build block to reference the source
 build {
   name = "openclaw-vagrant-${var.arch}"
   
-  sources = var.arch == "arm64" ? [
-    "source.qemu.openclaw_arm64"
-  ] : [
+  sources = [
     "source.virtualbox-iso.openclaw"
   ]
 

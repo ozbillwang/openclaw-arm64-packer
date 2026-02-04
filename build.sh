@@ -15,15 +15,17 @@ if ! command -v packer &> /dev/null; then
 fi
 
 if [ "$ARCH" = "arm64" ]; then
-    # For ARM64, check if QEMU is available
-    if ! command -v qemu-system-aarch64 &> /dev/null; then
-        echo "Warning: qemu-system-aarch64 is not installed. For ARM64 builds, QEMU is recommended."
-        echo "On macOS, you can install with: brew install qemu"
-        echo "On Ubuntu/Debian: sudo apt install qemu-system-arm"
-        echo "VirtualBox has limited ARM64 support."
+    # For ARM64, we currently use VirtualBox but recommend QEMU
+    if ! command -v VBoxManage &> /dev/null; then
+        echo "Error: VirtualBox is not installed. Please install VirtualBox first."
+        echo "For better ARM64 support, also install QEMU and the Packer QEMU plugin:"
+        echo "  brew install qemu"
+        echo "  packer plugins install github.com/hashicorp/qemu"
+        exit 1
     fi
     
-    echo "Starting Packer build process for ARM64..."
+    echo "Starting Packer build process for ARM64 (using VirtualBox - limited support)..."
+    echo "Note: VirtualBox has limited ARM64 support. For better results, install QEMU plugin."
     packer build -var="arch=arm64" openclaw-debian.pkr.hcl
 elif [ "$ARCH" = "amd64" ]; then
     if ! command -v VBoxManage &> /dev/null; then
@@ -42,16 +44,9 @@ fi
 echo ""
 echo "Build completed successfully!"
 echo ""
-if [ "$ARCH" = "arm64" ]; then
-    echo "To add the ARM64 box to Vagrant, run:"
-    echo "  vagrant box add openclaw/openclaw-arm64 package/output-qemu/openclaw-*.box"
-    echo ""
-    echo "For ARM64, you may need to use libvirt/QEMU provider in Vagrant."
-else
-    echo "To add the box to Vagrant, run:"
-    echo "  vagrant box add openclaw/openclaw package/output-virtualbox-iso/openclaw-*.box"
-    echo ""
-fi
+echo "To add the box to Vagrant, run:"
+echo "  vagrant box add openclaw/openclaw package/output-virtualbox-iso/openclaw-*.box"
+echo ""
 echo "Then create a new directory, initialize Vagrant, and start the VM:"
 echo "  mkdir openclaw-vm && cd openclaw-vm"
 echo "  vagrant init openclaw/openclaw"
