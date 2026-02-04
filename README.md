@@ -28,10 +28,7 @@ For macOS (especially Apple Silicon Macs):
 
 3. Install Packer QEMU plugin (required for ARM64 builds):
    ```bash
-   # First install packer-plugin-manager to manage plugins
-   brew install hashicorp/tap/packer-plugin-manager
-   
-   # Install the QEMU plugin
+   # Install the QEMU plugin directly
    packer plugins install github.com/hashicorp/qemu
    ```
 
