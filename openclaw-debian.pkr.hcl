@@ -23,23 +23,8 @@ source "virtualbox-iso" "openclaw" {
   guest_os_type     = var.arch == "arm64" ? "Debian_64" : "Debian_64"  # VirtualBox doesn't distinguish well between arch types
   disk_size         = 10000
   
-  dynamic "iso_config" {
-    for_each = var.arch == "arm64" ? [
-      {
-        url      = "https://cdimage.debian.org/debian-cd/current/arm64/iso-cd/debian-12.8.0-arm64-netinst.iso"
-        checksum = "sha256:079cd351af2d9985f14da2abc6bb92a759e8d49e8c4f3245d71398a31e2e922f"
-      }
-    ] : [
-      {
-        url      = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.8.0-amd64-netinst.iso"
-        checksum = "sha256:aac3f3dee934bc10f1eeb6a72e417bf051e8dead14781533b0655ed04c8fe3b6"
-      }
-    ]
-    content {
-      iso_url      = iso_config.value.url
-      iso_checksum = iso_config.value.checksum
-    }
-  }
+  iso_url      = var.arch == "arm64" ? "https://cdimage.debian.org/debian-cd/current/arm64/iso-cd/debian-12.8.0-arm64-netinst.iso" : "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.8.0-amd64-netinst.iso"
+  iso_checksum = var.arch == "arm64" ? "sha256:079cd351af2d9985f14da2abc6bb92a759e8d49e8c4f3245d71398a31e2e922f" : "sha256:aac3f3dee934bc10f1eeb6a72e417bf051e8dead14781533b0655ed04c8fe3b6"
   
   ssh_username      = "vagrant"
   ssh_password      = "vagrant"
@@ -53,43 +38,36 @@ source "virtualbox-iso" "openclaw" {
   ]
 
   # Different boot commands for ARM64 vs AMD64
-  dynamic "boot_cmd" {
-    for_each = var.arch == "arm64" ? [
-      ["<wait2s><esc><wait>", "install <wait>",
-       " preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg <wait>",
-       "debian-installer=en_US.UTF-8 <wait>",
-       "auto <wait>",
-       "locale=en_US.UTF-8 <wait>",
-       "kbd-chooser/method=us <wait>",
-       "keyboard-configuration/xkb-keymap=us <wait>",
-       "netcfg/get_hostname={{user `vm_name`}} <wait>",
-       "netcfg/get_domain=vagrantup.com <wait>",
-       "<enter><wait>"]
-    ] : [
-      ["<esc><wait>",
-       "install <wait>",
-       " preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg <wait>",
-       "debian-installer=en_US.UTF-8 <wait>",
-       "auto <wait>",
-       "locale=en_US.UTF-8 <wait>",
-       "kbd-chooser/method=us <wait>",
-       "keyboard-configuration/xkb-keymap=us <wait>",
-       "netcfg/get_hostname={{user `vm_name`}} <wait>",
-       "netcfg/get_domain=vagrantup.com <wait>",
-       "<enter><wait>"]
-    ]
-    content {
-      boot_command = boot_cmd.value
-    }
-  }
+  boot_command = var.arch == "arm64" ? [
+    "<wait2s><esc><wait>", "install <wait>",
+    " preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg <wait>",
+    "debian-installer=en_US.UTF-8 <wait>",
+    "auto <wait>",
+    "locale=en_US.UTF-8 <wait>",
+    "kbd-chooser/method=us <wait>",
+    "keyboard-configuration/xkb-keymap=us <wait>",
+    "netcfg/get_hostname={{user `vm_name`}} <wait>",
+    "netcfg/get_domain=vagrantup.com <wait>",
+    "<enter><wait>"
+  ] : [
+    "<esc><wait>",
+    "install <wait>",
+    " preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg <wait>",
+    "debian-installer=en_US.UTF-8 <wait>",
+    "auto <wait>",
+    "locale=en_US.UTF-8 <wait>",
+    "kbd-chooser/method=us <wait>",
+    "keyboard-configuration/xkb-keymap=us <wait>",
+    "netcfg/get_hostname={{user `vm_name`}} <wait>",
+    "netcfg/get_domain=vagrantup.com <wait>",
+    "<enter><wait>"
+  ]
 
   http_directory = "."
 }
 
 # Also add a QEMU builder for better ARM64 support
 source "qemu" "openclaw_arm64" {
-  # Only build for ARM64 with QEMU since VirtualBox has limited ARM64 support
-  count             = var.arch == "arm64" ? 1 : 0
   vm_name           = local.vm_name
   format            = "qcow2"
   disk_image        = true
@@ -131,16 +109,11 @@ source "qemu" "openclaw_arm64" {
 build {
   name = "openclaw-vagrant-${var.arch}"
   
-  dynamic "sources" {
-    for_each = var.arch == "arm64" ? [
-      "source.qemu.openclaw_arm64"
-    ] : [
-      "source.virtualbox-iso.openclaw"
-    ]
-    content {
-      sources = sources.value
-    }
-  }
+  sources = var.arch == "arm64" ? [
+    "source.qemu.openclaw_arm64"
+  ] : [
+    "source.virtualbox-iso.openclaw"
+  ]
 
   provisioner "shell" {
     inline = [
