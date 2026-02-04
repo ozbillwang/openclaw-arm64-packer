@@ -1,0 +1,42 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # Detect host architecture to use appropriate box
+  host_arch = RUBY_PLATFORM.include?('aarch64') || RUBY_PLATFORM.include?('arm64') ? 'arm64' : 'amd64'
+  
+  if host_arch == 'arm64'
+    config.vm.box = "openclaw/openclaw-arm64"
+    # For ARM64, you may want to use QEMU provider
+    config.vm.provider "qemu" do |qemu|
+      qemu.cpus = 2
+      qemu.memory = "2048"
+    end
+  else
+    config.vm.box = "openclaw/openclaw"
+    # Configure VirtualBox provider for AMD64
+    config.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.name = "openclaw"
+      vb.cpus = 2
+      vb.memory = "2048"
+    end
+  end
+
+  # Port forwarding for OpenClaw web interface
+  config.vm.network "forwarded_port", guest: 3000, host: 3000
+  config.vm.network "forwarded_port", guest: 8080, host: 8080
+
+  # Provision script to start OpenClaw service
+  config.vm.provision "shell", inline: <<-SHELL
+    cd /app
+    export NODE_ENV=production
+    export PATH="/home/vagrant/.bun/bin:$PATH"
+    
+    # Start OpenClaw in background
+    sudo -u vagrant -H bash -c 'cd /app && nohup npm run gateway > /var/log/openclaw.log 2>&1 &'
+    
+    echo "OpenClaw should be accessible at http://localhost:3000"
+    echo "Check logs with: vagrant ssh -c 'tail -f /var/log/openclaw.log'"
+  SHELL
+end
