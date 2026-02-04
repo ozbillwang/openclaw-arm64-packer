@@ -26,10 +26,22 @@ For macOS (especially Apple Silicon Macs):
    brew install qemu
    ```
 
-3. Install Packer QEMU plugin (required for ARM64 builds):
+3. Install Packer QEMU plugin (required for proper ARM64 builds):
    ```bash
-   # Install the QEMU plugin directly
+   # Install the QEMU plugin directly using packer's built-in plugin management
    packer plugins install github.com/hashicorp/qemu
+   ```
+   
+   Alternatively, you can manually download and install the plugin:
+   ```bash
+   # Create plugins directory if it doesn't exist
+   mkdir -p ~/.packer.d/plugins/github.com/hashicorp/qemu/
+   
+   # Download the appropriate QEMU plugin for your system
+   # Visit https://releases.hashicorp.com/packer-plugin-qemu/ to find the latest version
+   # For example:
+   # wget https://releases.hashicorp.com/packer-plugin-qemu/<VERSION>/packer-plugin-qemu_<VERSION>_darwin_arm64.zip
+   # unzip packer-plugin-qemu_<VERSION>_darwin_arm64.zip -d ~/.packer.d/plugins/github.com/hashicorp/qemu/
    ```
 
 4. Install Vagrant QEMU plugin (for ARM64 Vagrant support):
