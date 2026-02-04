@@ -3,11 +3,6 @@ variable "version" {
   default = "1.0.0"
 }
 
-variable "vm_name" {
-  type    = string
-  default = "openclaw-${var.version}"
-}
-
 variable "arch" {
   type    = string
   default = "amd64"  # Can be amd64 or arm64
@@ -18,9 +13,13 @@ variable "headless" {
   default = "true"
 }
 
+locals {
+  vm_name = "openclaw-${var.version}-${var.arch}"
+}
+
 # Source definition for VirtualBox ISO builder
 source "virtualbox-iso" "openclaw" {
-  vm_name           = "${var.vm_name}-${var.arch}"
+  vm_name           = local.vm_name
   guest_os_type     = var.arch == "arm64" ? "Debian_64" : "Debian_64"  # VirtualBox doesn't distinguish well between arch types
   disk_size         = 10000
   
@@ -91,7 +90,7 @@ source "virtualbox-iso" "openclaw" {
 source "qemu" "openclaw_arm64" {
   # Only build for ARM64 with QEMU since VirtualBox has limited ARM64 support
   count             = var.arch == "arm64" ? 1 : 0
-  vm_name           = "${var.vm_name}-arm64"
+  vm_name           = local.vm_name
   format            = "qcow2"
   disk_image        = true
   iso_url           = "https://cdimage.debian.org/debian-cd/current/arm64/iso-cd/debian-12.8.0-arm64-netinst.iso"
@@ -130,7 +129,7 @@ source "qemu" "openclaw_arm64" {
 
 # Build block to reference the source
 build {
-  name = "openclaw-vagrant"
+  name = "openclaw-vagrant-${var.arch}"
   
   dynamic "sources" {
     for_each = var.arch == "arm64" ? [

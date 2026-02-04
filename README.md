@@ -4,14 +4,33 @@ This repository contains the Packer template to build a Vagrant box for OpenClaw
 
 ## Prerequisites
 
-- [Packer](https://www.packer.io/downloads)
-- [Vagrant](https://www.vagrantup.com/downloads)
+For macOS (especially Apple Silicon Macs):
 
-For AMD64 builds:
+1. Install Homebrew (if not already installed):
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+2. Install required tools:
+   ```bash
+   # Tap HashiCorp repository
+   brew tap hashicorp/tap
+   
+   # Install Packer
+   brew install hashicorp/tap/packer
+   
+   # Install Vagrant
+   brew install vagrant
+   
+   # Install QEMU for ARM64 support (essential for Apple Silicon)
+   brew install qemu
+   
+   # Install Vagrant QEMU plugin (for ARM64 Vagrant support)
+   vagrant plugin install vagrant-qemu
+   ```
+
+For AMD64 builds, you may also want VirtualBox:
 - [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
-
-For ARM64 builds:
-- [QEMU](https://www.qemu.org/download/) (recommended for ARM64 builds)
 
 ## Building the Vagrant Box
 
@@ -117,3 +136,23 @@ For the best experience on Apple Silicon Macs, consider using QEMU provider for 
    vagrant plugin install vagrant-qemu
    ```
 2. Use the ARM64 box with the QEMU provider
+
+## Troubleshooting
+
+### On macOS, if you encounter issues with command-line tools:
+
+1. If packer command is not found after installation:
+   ```bash
+   # Make sure HashiCorp tap is added
+   brew tap hashicorp/tap
+   # Then install packer
+   brew install hashicorp/tap/packer
+   ```
+
+2. If you get permission errors during Packer builds:
+   - Make sure you have sufficient disk space for VM creation
+   - Check that no other VM applications are consuming excessive resources
+
+3. For ARM64 builds specifically:
+   - Ensure QEMU is installed: `brew install qemu`
+   - Consider increasing allocated memory in the Packer template if builds fail
